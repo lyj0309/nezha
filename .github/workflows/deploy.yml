@@ -8,20 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        run: |
-          'debug: false
-        httpport: 80
-        grpcport: 5555
-          oauth2:
-            type: "github"
-            admin: "lyj0309"
-            clientid: "b02ab61a75edd1b98f11"
-            clientsecret: ${{ secrets.CLIENT_SECRET }}
-          site:
-            brand: "fakev-status"
-            cookiename: "nezha-dashboard"
-            theme: "default"
-        ' > config.yaml
+      - run: echo '${{ secrets.CONFIG }}' > ./config.yaml
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
 
