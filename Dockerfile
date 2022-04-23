@@ -17,7 +17,7 @@ COPY ./resource ./resource
 COPY --from=binarybuilder /dashboard/cmd/dashboard/app ./app
 
 VOLUME ["/dashboard/data"]
-COPY ./config.yaml ./data/config.yaml
+COPY ./config.yaml ./config.yaml
 
 EXPOSE 80 5555
 CMD ["/dashboard/app"]
