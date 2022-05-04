@@ -1,6 +1,6 @@
 {{define "dashboard/terminal"}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{.Conf.Language}}">
 
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tty@{{.ServerName}} - {{.Title}}</title>
     <link rel="shortcut icon" type="image/png" href="/static/logo.svg?v20210804" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.13.0/css/xterm.css">
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/xterm@4.13.0/css/xterm.css">
 </head>
 
 <style>
@@ -28,9 +28,9 @@
 
 <body onresize="onResize()">
     <div id="terminal-container"></div>
-    <script src="https://cdn.jsdelivr.net/npm/xterm@4.13.0/lib/xterm.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-attach@0.6.0/lib/xterm-addon-attach.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/xterm@4.13.0/lib/xterm.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/xterm-addon-attach@0.6.0/lib/xterm-addon-attach.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.min.js"></script>
     <script>
         let sendResizing = false;
 
@@ -84,12 +84,12 @@
         }
 
         socket.onclose = () => {
-            alert('Terminal 连接超时或会话已结束')
+            alert('{{tr "TerminalConnectionTimeOutOrSessionEnded"}}')
             window.close()
         }
 
         socket.onerror = () => {
-            alert('Terminal 连接失败，请检查 /terminal/* 的 WebSocket 反代情况')
+            alert('{{tr "TerminalConnectionFailed"}}')
         }
     </script>
 </body>
