@@ -12,7 +12,7 @@ import (
 	"github.com/naiba/nezha/pkg/utils"
 )
 
-var Version = "v0.13.13" // ！！记得修改 README 中的 badge 版本！！
+var Version = "v0.13.19" // ！！记得修改 README 中的 badge 版本！！
 
 var (
 	Conf  *model.Config
@@ -38,6 +38,7 @@ func LoadSingleton() {
 	LoadNotifications() // 加载通知服务
 	LoadServers()       // 加载服务器列表
 	LoadCronTasks()     // 加载定时任务
+	LoadAPI()
 }
 
 // InitConfigFromPath 从给出的文件路径中加载配置
@@ -63,7 +64,7 @@ func InitDBFromPath(path string) {
 	}
 	err = DB.AutoMigrate(model.Server{}, model.User{},
 		model.Notification{}, model.AlertRule{}, model.Monitor{},
-		model.MonitorHistory{}, model.Cron{}, model.Transfer{})
+		model.MonitorHistory{}, model.Cron{}, model.Transfer{}, model.ApiToken{})
 	if err != nil {
 		panic(err)
 	}

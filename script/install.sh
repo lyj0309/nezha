@@ -11,7 +11,7 @@ NZ_BASE_PATH="/opt/nezha"
 NZ_DASHBOARD_PATH="${NZ_BASE_PATH}/dashboard"
 NZ_AGENT_PATH="${NZ_BASE_PATH}/agent"
 NZ_AGENT_SERVICE="/etc/systemd/system/nezha-agent.service"
-NZ_VERSION="v0.9.1"
+NZ_VERSION="v0.10.2"
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -124,15 +124,16 @@ before_show_menu() {
 }
 
 install_base() {
-    (command -v git >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v wget >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1) ||
+    (command -v git >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v wget >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1 && command -v getenforce >/dev/null 2>&1) ||
         (install_soft curl wget git unzip)
 }
 
 install_soft() {
-    (command -v yum >/dev/null 2>&1 && yum install $* -y) ||
-        (command -v apt >/dev/null 2>&1 && apt install $* -y) ||
+    # Arch官方库不包含selinux等组件
+    (command -v yum >/dev/null 2>&1 && yum makecache && yum install $* selinux-policy -y) ||
+        (command -v apt >/dev/null 2>&1 && apt update && apt install $* selinux-utils -y) ||
         (command -v pacman >/dev/null 2>&1 && pacman -Syu $*) ||
-        (command -v apt-get >/dev/null 2>&1 && apt-get install $* -y)
+        (command -v apt-get >/dev/null 2>&1 && apt-get update && apt-get install $* selinux-utils -y)
 }
 
 install_dashboard() {
@@ -141,7 +142,26 @@ install_dashboard() {
     echo -e "> 安装面板"
 
     # 哪吒监控文件夹
-    mkdir -p $NZ_DASHBOARD_PATH
+    if [ ! -d "${NZ_DASHBOARD_PATH}" ]; then
+        mkdir -p $NZ_DASHBOARD_PATH
+    else
+        echo "您可能已经安装过面板端，重复安装会覆盖数据，请注意备份。"
+        read -e -r -p "是否退出安装? [Y/n] " input
+        case $input in
+        [yY][eE][sS] | [yY])
+            echo "退出安装"
+            exit 0
+            ;;
+        [nN][oO] | [nN])
+            echo "继续安装"
+            ;;
+        *)
+            echo "退出安装"
+            exit 0
+            ;;
+        esac
+    fi
+    
     chmod 777 -R $NZ_DASHBOARD_PATH
 
     command -v docker >/dev/null 2>&1
@@ -176,8 +196,20 @@ install_dashboard() {
     fi
 }
 
+selinux(){
+    #判断当前的状态
+    getenforce | grep '[Ee]nfor'
+    if [ $? -eq 0 ];then
+        echo -e "SELinux是开启状态，正在关闭！" 
+        setenforce 0 &>/dev/null
+        find_key="SELINUX="
+        sed -ri "/^$find_key/c${find_key}disabled" /etc/selinux/config
+    fi
+}
+
 install_agent() {
     install_base
+    selinux
 
     echo -e "> 安装监控Agent"
 
@@ -186,6 +218,9 @@ install_agent() {
     local version=$(curl -m 10 -sL "https://api.github.com/repos/naiba/nezha/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
     if [ ! -n "$version" ]; then
         version=$(curl -m 10 -sL "https://fastly.jsdelivr.net/gh/naiba/nezha/" | grep "option\.value" | awk -F "'" '{print $2}' | sed 's/naiba\/nezha@/v/g')
+    fi
+    if [ ! -n "$version" ]; then
+        version=$(curl -m 10 -sL "https://gcore.jsdelivr.net/gh/naiba/nezha/" | grep "option\.value" | awk -F "'" '{print $2}' | sed 's/naiba\/nezha@/v/g')
     fi
 
     if [ ! -n "$version" ]; then
